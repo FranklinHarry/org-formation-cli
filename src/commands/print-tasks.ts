@@ -7,6 +7,7 @@ import { BuildRunner } from '~build-tasks/build-runner';
 import { Validator } from '~parser/validator';
 import { AwsUtil } from '~util/aws-util';
 import { ConsoleUtil } from '~util/console-util';
+import { GlobalState } from '~util/global-state';
 
 const commandName = 'print-tasks <tasksFile>';
 const commandDescription = 'Will print out all cloudformation templates that will be deployed by tasksFile';
@@ -60,7 +61,10 @@ export class PrintTasksCommand extends BaseCliCommand<IPrintTasksCommandArgs> {
 
         command.parsedParameters = this.parseCfnParameters(command.parameters);
         const config = new BuildConfiguration(tasksFile, command.parsedParameters, command.TemplatingContext);
-        await config.fixateOrganizationFile(command);
+        const template = await config.fixateOrganizationFile(command);
+        const state = await this.getState(command);
+
+        GlobalState.Init(state, template);
 
         const printTasks = config.enumPrintTasks(command);
 
