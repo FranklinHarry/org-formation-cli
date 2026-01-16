@@ -6,6 +6,7 @@ import { BuildRunner } from '~build-tasks/build-runner';
 import { Validator } from '~parser/validator';
 import { AwsUtil } from '~util/aws-util';
 import { ConsoleUtil } from '~util/console-util';
+import { GlobalState } from '~util/global-state';
 
 const commandName = 'validate-tasks <tasksFile>';
 const commandDescription = 'Will validate the tasks file, including configured tasks';
@@ -55,8 +56,10 @@ export class ValidateTasksCommand extends BaseCliCommand<IPerformTasksCommandArg
 
         command.parsedParameters = this.parseCfnParameters(command.parameters);
         const config = new BuildConfiguration(tasksFile, command.parsedParameters, command.TemplatingContext);
+        const template = await config.fixateOrganizationFile(command);
+        const state = await this.getState(command);
 
-        await config.fixateOrganizationFile(command);
+        GlobalState.Init(state, template);
         const validationTasks = config.enumValidationTasks(command);
 
         if (command.match) {
